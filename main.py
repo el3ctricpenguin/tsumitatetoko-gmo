@@ -67,7 +67,7 @@ def place_market_order(size: float):
 
 def get_execution(orderId: int):
     # not working
-    res = private_api("GET", f"/v1/executions",{"orderId": orderId})
+    res = private_api("GET", f"/v1/executions", {"orderId": orderId})
     print(res)
     return res.json()
 
@@ -83,6 +83,7 @@ def send_line_message(message: str):
     payload = {"message": "\n" + message}
 
     requests.post(LINE_NOTIFY_URL, headers=headers, data=payload)
+
 
 if __name__ == "__main__":
     try:
@@ -101,21 +102,23 @@ if __name__ == "__main__":
         print("order_size: ", order_size)
 
         orderResult = place_market_order(order_size)
-        if not orderResult["status"]==0:
-            raise RuntimeError(f"{orderResult["messages"]}")
+        if not orderResult["status"] == 0:
+            raise RuntimeError(f"{orderResult['messages']}")
 
-        order_id=int(orderResult["data"])
+        order_id = int(orderResult["data"])
         print("order_id: ", order_id)
 
         # BTC購入後の余力から購入レートを計算 / calc bought price based on balance change
         time.sleep(2)
         new_available_amount = get_available_amount()
-        used_jpy = available_amount-new_available_amount
+        used_jpy = available_amount - new_available_amount
         print("used_jpy: ", used_jpy)
-        estimated_price=int(used_jpy/order_size)
+        estimated_price = int(used_jpy / order_size)
         print("estimated_price: ", estimated_price)
-        send_line_message(f"【今日のBTC購入】\n推定購入レート: {estimated_price:,}円\n購入数量: {order_size}BTC\n購入金額: {used_jpy:,}円\n現在余力: {new_available_amount:,}円")
-        
+        send_line_message(
+            f"【今日のBTC購入】\n推定購入レート: {estimated_price:,}円\n購入数量: {order_size}BTC\n購入金額: {used_jpy:,}円\n現在余力: {new_available_amount:,}円"
+        )
+
         # 次回購入時に余力が不足している場合に警告 / send caution if available JPY is not enough for next purchase
         if LOT > new_available_amount:
             send_line_message(f"次回購入のための余力が不足しています。")
