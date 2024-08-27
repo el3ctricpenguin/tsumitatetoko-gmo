@@ -5,11 +5,14 @@ import os
 from dotenv import load_dotenv
 
 BASE_URL = "https://api.coin.z.com/"
+LINE_NOTIFY_URL = 'https://notify-api.line.me/api/notify'
+USE_LINE_NOTIFY = True
 
 load_dotenv()
 API_KEY = os.environ.get("API_KEY")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 LOT = int(os.environ.get("LOT"))
+ACCESS_TOKEN = os.environ.get("LINE_NOTIFY_ACCESS_TOKEN")
 
 
 def public_api(path: str):
@@ -57,22 +60,37 @@ def place_market_order(size: float):
     res = private_api("POST", "/v1/order", market_order)
     return res.json()
 
+def send_line_message(message:str):
+    if not USE_LINE_NOTIFY:
+        return
+    
+    headers = {
+        'Authorization': f'Bearer {ACCESS_TOKEN}',
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+    payload = {'message': "\n" + message}
+
+    requests.post(LINE_NOTIFY_URL, headers=headers, data=payload)
 
 if __name__ == "__main__":
-    available_amount = get_available_amount()
-    print("available_amount: ", available_amount)
-    if LOT > available_amount:
-        raise ValueError("余力が不足しています。")
-    btc_price = get_btc_ask_price()
-    print("btc_price: ", btc_price)
-    min_order_size = get_min_order_size()
-    print("min_order_size: ", min_order_size)
+    try:
+        available_amount = get_available_amount()
+        print("available_amount: ", available_amount)
+        if LOT > available_amount:
+            raise ValueError(f"余力が不足しています。\n(現在余力: {available_amount}円)")
+        btc_price = get_btc_ask_price()
+        print("btc_price: ", btc_price)
+        min_order_size = get_min_order_size()
+        print("min_order_size: ", min_order_size)
 
-    order_size = round(int(LOT / btc_price / min_order_size) * min_order_size, 8)
-    print("order_size: ", order_size)
+        order_size = round(int(LOT / btc_price / min_order_size) * min_order_size, 8)
+        print("order_size: ", order_size)
 
-    orderResult = place_market_order(order_size)
-    print("orderResult: ", orderResult)
-    if not orderResult["status"]==0:
-        raise RuntimeError(f"error: {orderResult["messages"]}")
+        orderResult = place_market_order(order_size)
+        print("orderResult: ", orderResult)
+        if not orderResult["status"]==0:
+            raise RuntimeError(f"{orderResult["messages"]}")
+    except Exception as e:
+        print(f"Error: {e}")
+        send_line_message(f"エラー: {e}")
     
