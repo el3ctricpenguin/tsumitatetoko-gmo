@@ -86,6 +86,7 @@ def send_line_message(message: str):
 
 if __name__ == "__main__":
     try:
+        # 注文情報の取得 / get general info for order
         available_amount = get_available_amount()
         print("available_amount: ", available_amount)
         if LOT > available_amount:
@@ -95,6 +96,7 @@ if __name__ == "__main__":
         min_order_size = get_min_order_size()
         print("min_order_size: ", min_order_size)
 
+        # 購入金額の計算 / calc amount to order
         order_size = round(int(LOT / btc_price / min_order_size) * min_order_size, 8)
         print("order_size: ", order_size)
 
@@ -105,6 +107,7 @@ if __name__ == "__main__":
         order_id=int(orderResult["data"])
         print("order_id: ", order_id)
 
+        # BTC購入後の余力から購入レートを計算 / calc bought price based on balance change
         time.sleep(2)
         new_available_amount = get_available_amount()
         used_jpy = available_amount-new_available_amount
@@ -112,6 +115,10 @@ if __name__ == "__main__":
         estimated_price=int(used_jpy/order_size)
         print("estimated_price: ", estimated_price)
         send_line_message(f"【今日のBTC購入】\n推定購入レート: {estimated_price:,}円\n購入数量: {order_size}BTC")
+        
+        # 次回購入時に余力が不足している場合に警告 / send caution if available JPY is not enough for next purchase
+        if LOT > new_available_amount:
+            send_line_message(f"次回購入のための余力が不足しています。\n(現在余力: {new_available_amount}円)")
 
     except Exception as e:
         print(f"Error: {e}")
