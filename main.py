@@ -12,6 +12,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 LOT = int(os.environ.get("LOT"))
 
 
+def public_api(path: str):
+    endPoint = BASE_URL + "public"
+    return requests.get(endPoint + path)
+
+
 def private_api(method: str, path: str):
     timestamp = "{0}000".format(int(time.mktime(datetime.now().timetuple())))
     endPoint = BASE_URL + "private"
@@ -30,11 +35,18 @@ def private_api(method: str, path: str):
 
 def get_available_amount():
     res = private_api("GET", "/v1/account/margin")
-    return res.json()["data"]["availableAmount"]
+    return int(res.json()["data"]["availableAmount"])
+
+
+def get_btc_ask_price():
+    res = public_api("/v1/ticker?symbol=BTC")
+    return int(res.json()["data"][0]["ask"])
 
 
 if __name__ == "__main__":
-    available_amount = int(get_available_amount())
+    available_amount = get_available_amount()
     print("available_amount: ", available_amount)
     if LOT > available_amount:
         raise ValueError("余力が不足しています。")
+    btc_price = get_btc_ask_price()
+    print("btc_price: ", btc_price)
