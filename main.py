@@ -67,7 +67,7 @@ def place_market_order(size: float):
 
 def get_execution(orderId: int):
     # not working
-    res = private_api("GET", f"/v1/executions?executionId={orderId}")
+    res = private_api("GET", f"/v1/executions",{"orderId": orderId})
     print(res)
     return res.json()
 
