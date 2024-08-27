@@ -17,12 +17,11 @@ def public_api(path: str):
     return requests.get(endPoint + path)
 
 
-def private_api(method: str, path: str):
+def private_api(method: str, path: str, parameters: dict = {}):
     timestamp = "{0}000".format(int(time.mktime(datetime.now().timetuple())))
     endPoint = BASE_URL + "private"
-    reqBody = {}
 
-    text = timestamp + method + path + "" if reqBody == {} else json.dumps(reqBody)
+    text = timestamp + method + path + ("" if parameters == {} else json.dumps(parameters))
     sign = hmac.new(bytes(SECRET_KEY.encode("ascii")), bytes(text.encode("ascii")), hashlib.sha256).hexdigest()
 
     headers = {"API-KEY": API_KEY, "API-TIMESTAMP": timestamp, "API-SIGN": sign}
@@ -30,7 +29,7 @@ def private_api(method: str, path: str):
     if method == "GET":
         return requests.get(endPoint + path, headers=headers)
     if method == "POST":
-        return requests.post(endPoint + path, headers=headers)
+        return requests.post(endPoint + path, headers=headers, data=json.dumps(parameters))
 
 
 def get_available_amount():
@@ -48,6 +47,17 @@ def get_min_order_size():
     return float(res.json()["data"][0]["minOrderSize"])
 
 
+def place_market_order(size: float):
+    market_order = {
+        "symbol": "BTC",
+        "side": "BUY",
+        "executionType": "MARKET",
+        "size": str(size),
+    }
+    res = private_api("POST", "/v1/order", market_order)
+    return res.json()
+
+
 if __name__ == "__main__":
     available_amount = get_available_amount()
     print("available_amount: ", available_amount)
@@ -57,3 +67,12 @@ if __name__ == "__main__":
     print("btc_price: ", btc_price)
     min_order_size = get_min_order_size()
     print("min_order_size: ", min_order_size)
+
+    order_size = round(int(LOT / btc_price / min_order_size) * min_order_size, 8)
+    print("order_size: ", order_size)
+
+    orderResult = place_market_order(order_size)
+    print("orderResult: ", orderResult)
+    if not orderResult["status"]==0:
+        raise RuntimeError(f"error: {orderResult["messages"]}")
+    
