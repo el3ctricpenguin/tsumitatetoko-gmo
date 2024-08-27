@@ -12,7 +12,7 @@ load_dotenv()
 API_KEY = os.environ.get("API_KEY")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 LOT = int(os.environ.get("LOT"))
-ACCESS_TOKEN = os.environ.get("LINE_NOTIFY_ACCESS_TOKEN")
+ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 
 
 def public_api(path: str):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         available_amount = get_available_amount()
         print("available_amount: ", available_amount)
         if LOT > available_amount:
-            raise ValueError(f"余力が不足しています。\n(現在余力: {available_amount}円)")
+            raise ValueError(f"余力が不足しています。\n(現在余力: {available_amount:,}円)")
         btc_price = get_btc_ask_price()
         print("btc_price: ", btc_price)
         min_order_size = get_min_order_size()
@@ -114,11 +114,11 @@ if __name__ == "__main__":
         print("used_jpy: ", used_jpy)
         estimated_price=int(used_jpy/order_size)
         print("estimated_price: ", estimated_price)
-        send_line_message(f"【今日のBTC購入】\n推定購入レート: {estimated_price:,}円\n購入数量: {order_size}BTC")
+        send_line_message(f"【今日のBTC購入】\n推定購入レート: {estimated_price:,}円\n購入数量: {order_size}BTC\n購入金額: {used_jpy:,}円\n現在余力: {new_available_amount:,}円")
         
         # 次回購入時に余力が不足している場合に警告 / send caution if available JPY is not enough for next purchase
         if LOT > new_available_amount:
-            send_line_message(f"次回購入のための余力が不足しています。\n(現在余力: {new_available_amount}円)")
+            send_line_message(f"次回購入のための余力が不足しています。")
 
     except Exception as e:
         print(f"Error: {e}")
