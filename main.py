@@ -43,6 +43,11 @@ def get_btc_ask_price():
     return int(res.json()["data"][0]["ask"])
 
 
+def get_min_order_size():
+    res = public_api("/v1/symbols")
+    return float(res.json()["data"][0]["minOrderSize"])
+
+
 if __name__ == "__main__":
     available_amount = get_available_amount()
     print("available_amount: ", available_amount)
@@ -50,3 +55,5 @@ if __name__ == "__main__":
         raise ValueError("余力が不足しています。")
     btc_price = get_btc_ask_price()
     print("btc_price: ", btc_price)
+    min_order_size = get_min_order_size()
+    print("min_order_size: ", min_order_size)
