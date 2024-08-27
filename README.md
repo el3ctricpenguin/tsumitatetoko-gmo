@@ -1,2 +1,2 @@
 # tsumitatetoko-gmo
-「つみたてとこ」の代わりにDCA (YCA)を行うBot
+「[つみたてとこ](https://tsumitatetoko.com/)」の代わりにGMOコインでBTCのDCA (YCA)を行うBot
